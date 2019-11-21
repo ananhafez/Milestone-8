@@ -7,42 +7,117 @@
 #    http://shiny.rstudio.com/
 #
 
-library(shiny)
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
-
-    # Application title
-    titlePanel("Old Faithful Geyser Data"),
-
-    # Sidebar with a slider input for number of bins 
-    sidebarLayout(
-        sidebarPanel(
-            sliderInput("bins",
-                        "Number of bins:",
-                        min = 1,
-                        max = 50,
-                        value = 30)
+    
+    navbarPage(
+        "Analysis of 3-pointers in the NBA",
+        tabPanel(
+            title = "Introduction",
+            h5("By Anan Hafez"),
+            h3("About:"),
+            p(
+                "I've loved the game of basketball since I was a young kid. Growing up in Los Angeles, I loved going to Lakers games with my dad, watching them win two championships in a row, and buying as many Kobe Bryant jerseys as my parents would let me. I even played in a YMCA basketball league and my team won the championship! (Would you believe that?) Over the years though, I've seen a massive shift the way basketball is played. Every kid now wants to be like Steph Curry, shooting from super far away and repeatedly making it. In recent years, teams are allegedly taking many more 3-point shots than when I was a kid and point totals are rising becuase of it. Games that used end with with 80 or 90 points now regularly end with over 100, 110, and sometimes 120 points. In fact, there have already been a few games in the most recent season that have ended with 150+ points! I wanted to test this theory with R. Are players really taking more 3-point shots than ever before, and how does that affect other parts of professional basketball? The three-point shot, as many fans know, was not always in the game. When Wilt and Russell used to play, each field goal counted as two points and free throw one. In the 1979-1980 season, the NBA adopted the three-point line, further from which, a shot would count as 3 points. This change, undeniably, has changed the game to head to toe. Hopefully, with many visualizations and (finally) clean code, I can see how and why professional basketball has changed in the past few decades. "
+             )
+            # br(),
+            # h3("Organization of the App:"),
+            # p(
+            #     "Why Texas:? On this page I show why Texas is one of, if not the, most important states when discussing the death penalty."
+            # ),
+            # p(
+            #     "Most Common Words: On this page, you can see specific visualizations of the breakdown of sentiments in all Last Statements by selecting which sentiment to include in a pie chart. There is also a word cloud that shows the most commonly used words based on the sentiments selected."
+            # ),
+            # p(
+            #     "Time Plot: This graph plots the percentage of positive or negative words. Users can look at all subjects or subset based on race and/or age."
+            # ),
+            # p(
+            #     "Specific Inmates: This tab allows users see a random set of subjects and their last statements."
+            # ),
+            # br(),
+            # h3("Some Findings:"),
+            # p(
+            #     "As shown on the 'Why Texas?' tab, I found that Texas conducted nearly half of the death row executions nationwide in 2018. Though executions have decreased since 1999, Texas has maintained a large margin of the total executions and now, as stated, conducted the majority of them. Additionally, though 31 states have not outlawed the death penalty, less than 10 actually conducted any executions thsi year. This reaffirms some of the statements made in the Medium articles that discuss death penalty being more of a de factor life sentence in most states.   Sentiment Analysis begins on the Most Common Words tab which shows that a majority of the words in Last Statements are connote positivity and/or trust. The word cloud below shows that one of the most common words in Last Statements by the subjects was the word good with 55 entries.  The time plot is inconclusive. However, it does show that the percentage of positive words used has increased at a higher rate than the percentage of negative words used. "
+            # ),
+            # p(
+            #     "Poke around with the data and see if you can find more interesting insights."
+            # ),
+            # br(),
+            # h2("Relevant Reading Materials and Sources:"),
+            # p(
+            #     "https://medium.com/bigger-picture/kill-the-death-penalty-ea38c8929e30, https://medium.com/s/story/love-is-the-most-common-word-in-death-row-last-statements-f15ab0e8ad16, https://deathpenaltyinfo.org/views-executions, http://www.tdcj.state.tx.us/death_row/dr_executed_offenders.html"
+            # )
         ),
-
-        # Show a plot of the generated distribution
-        mainPanel(
-           plotOutput("distPlot")
+        
+        tabPanel(
+            title = "Growth of 3's",
+            h3("More Shots from Distance"),
+            p(
+                "Ever since its addition in 1980, teams and players have been turning to 3-point shots for a large share of their points. Teams like it because they can get an extra point by stepping a few extra feet back; this means they can convert them as regulary as 2-point shots. Players like it because the farther away they can be from the basket, the more seperation they can get between themselves and a defender."
+            ),
+            br(),
+            h4("Point Source Shares Each Season:"),
+            br(),
+            
+            sidebarPanel(
+                p("Select a season to see the breakdown of point sources for each NBA season."),
+                selectInput(
+                    inputId = "year",
+                    label = "Season:",
+                    choices = year_options,
+                    selected = "2019"
+                ),
+                br(),
+                
+            ),
+            br(),
+            mainPanel(plotOutput("piePlot")),
+            
+            # The breaks may not be needed but I wanted more space between the piePlot and the next graph.
+            
+            br(),
+            br(),
+            br(),
+            br(),
+            h4("The Past 70 Years of NBA Scoring:"),
+            p(
+                "Prior to 1980, three pointers represented 0% of the scoring in the league as it was not yet introduced. After 1980, the three-point line took on an increasingly important role with a road bump in the mid-90s. In 2008, three pointers officially surpassed free throws as the second most important scoring method in the league; and it does not look like its prevalence is declining any time soon. In fact, if the trend persists, by 2030, three points will be the most common increment in a basketball game."
+            ),
+            plotOutput("overallPlot")
         )
-    )
+
+)
+
 )
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
-
-    output$distPlot <- renderPlot({
-        # generate bins based on input$bins from ui.R
-        x    <- faithful[, 2]
-        bins <- seq(min(x), max(x), length.out = input$bins + 1)
-
-        # draw the histogram with the specified number of bins
-        hist(x, breaks = bins, col = 'darkgray', border = 'white')
+    output$piePlot <- renderPlot({
+      piechart <- nba_season_stats %>% 
+            group_by(Year) %>% 
+            summarise("2-Pointers" = sum(X2P * 2), "3-Pointers" = sum(X3P * 3), "Free Throws" = sum(FT)) %>% 
+            pivot_longer(-Year, names_to = "source", values_to = "count") %>% 
+            filter(Year == input$year) %>% 
+            ggplot(aes(x = "", y=count, fill = factor(source))) + geom_bar(stat="identity", width = 1) + 
+          theme(axis.line = element_blank(), 
+                plot.title = element_text(hjust=0.5)) +
+            labs(fill = "Shot Type",
+                 x = NULL,
+                 y = NULL,
+                 caption = "Source: NBA") 
+        
+        
+       piechart + coord_polar(theta = "y", start = 0)
+        
+        
     })
+    
+    # I use renderPlotly since I want my plot to be ggplotly with all the included functionality
+    
+    output$overallPlot <- renderPlot({
+        plot_2
+    })
+    
 }
 
 # Run the application 

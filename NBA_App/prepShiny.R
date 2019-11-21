@@ -29,7 +29,7 @@ library(broom)
 library(rstanarm)
 library(tidyverse)
 
-nba_season_stats <- read.csv("Data/Seasons_stats_complete.csv")
+nba_season_stats <- read.csv("Data/Seasons_stats_complete.csv") %>% filter(Year != "0")
 
 player_career_stats <- read.csv("Data/players.csv")
 
@@ -64,16 +64,13 @@ plot_2 <- ggplot(points_over_time, aes(Year)) +
   geom_line(aes(y = prop_3points, colour = "var1")) + 
   geom_line(aes(y = prop_ft, colour = "var2")) + 
   ylim(0,1) + 
-  scale_colour_manual(labels = c("2 Pointer", "3 Pointer", "Free Throw"), values = c("blue", "red", "green")) + 
+  scale_colour_manual(labels = c("2-Pointers", "3-Pointers", "Free Throws"), values = c("red", "green", "blue")) + 
   xlim(1950, 2020) + 
   labs(title = "Sources of NBA Points Over Time", 
        y = "Percentage of Total Points", x = "NBA Season") + 
   theme(legend.title = element_blank())
 
-
-
-
-
+year_options <- nba_season_stats %>% group_by(Year) %>% select(Year) %>% count() %>% select(Year)
 
 
 
