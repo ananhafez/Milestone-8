@@ -29,11 +29,11 @@ library(broom)
 library(rstanarm)
 library(tidyverse)
 
-nba_season_stats <- read.csv("Data/Seasons_stats_complete.csv") %>% filter(Year != "0")
+nba_season_stats <- read.csv("NBA_App/Data/Seasons_stats_complete.csv") %>% filter(Year != "0")
 
-player_career_stats <- read.csv("Data/players.csv")
+player_career_stats <- read.csv("NBA_App/Data/players.csv")
 
-dirty_player_salaries <- read.csv("Data/salaries_1985to2018.csv")
+dirty_player_salaries <- read.csv("NBA_App/Data/salaries_1985to2018.csv")
 
 player_salaries <- player_career_stats %>% 
   left_join(dirty_player_salaries, by = c("X_id" = "player_id")) %>% 
@@ -71,6 +71,3 @@ plot_2 <- ggplot(points_over_time, aes(Year)) +
   theme(legend.title = element_blank())
 
 year_options <- nba_season_stats %>% group_by(Year) %>% select(Year) %>% count() %>% select(Year)
-
-
-
